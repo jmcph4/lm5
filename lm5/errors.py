@@ -1,0 +1,3 @@
+class UnsupportedInputTypeError(Exception):
+    pass
+
