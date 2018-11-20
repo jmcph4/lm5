@@ -7,6 +7,8 @@ from .inputtype import InputType
 from .test import Test
 from mph.program import Program
 
+from fuzzbang.alphanumericfuzzer import AlphaNumericFuzzer
+
 def yaml2data(yaml_data):
     data = {}
     fields = yaml_data.keys()
@@ -14,8 +16,17 @@ def yaml2data(yaml_data):
     if "target_arguments" in fields:
         data[InputType.ARGV] = deepcopy(yaml_data["target_arguments"])
 
-    if "target_stdin" in fields:
-        data[InputType.STDIN] = yaml_data["target_stdin"]
+    if "target_stdin_type" in fields:
+        if yaml_data["target_stdin_type"] == "literal":
+            if "target_stdin" in fields:
+                data[InputType.STDIN] = yaml_data["target_stdin"]
+        else:
+            custom_fuzzer_name = yaml_data["target_stdin_type"]
+            custom_fuzzer_params = tuple(yaml_data["target_stdin"])
+
+            eval_string = custom_fuzzer_name + str(custom_fuzzer_params) + ".generate()"
+            print(eval_string) # DEBUG
+            data[InputType.STDIN] = eval(eval_string)
 
     return data
 
@@ -44,6 +55,7 @@ def main():
     # run test
     print("Running test \"{0}\"...".format(test.name))
     target_retval, target_stdout, target_stderr = test.run()
+    print(target_retval, target_stdout, target_stderr) # DEBUG
     print("Test \"{0}\" ran successfully.".format(test.name))
 
     # display test results
